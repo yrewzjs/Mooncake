@@ -39,6 +39,9 @@
 #ifdef USE_CXL
 #include "transport/cxl_transport/cxl_transport.h"
 #endif
+#ifdef USE_MEMFABRIC
+#include "transport/ascend_transport/memfabric_transport/memfabric_transport.h"
+#endif
 
 #include <cassert>
 
@@ -237,7 +240,11 @@ Transport *MultiTransport::installTransport(const std::string &proto,
         transport = new CxlTransport();
     }
 #endif
-
+#ifdef USE_MEMFABRIC
+    else if (std::string(proto) == "memfabric") {
+        transport = new MemFabricTransport();
+    }
+#endif
     if (!transport) {
         LOG(ERROR) << "Unsupported transport " << proto
                    << ", please rebuild Mooncake";

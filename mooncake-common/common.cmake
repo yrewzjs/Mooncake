@@ -62,6 +62,7 @@ option(USE_NVMEOF "option for using NVMe over Fabric" OFF)
 option(USE_TCP "option for using TCP transport" ON)
 option(USE_ASCEND "option for using npu with HCCL" OFF)
 option(USE_ASCEND_DIRECT "option for using ascend npu with adxl engine" OFF)
+option(USE_MEMFABRIC "option for using memfabric transport" ON)
 option(USE_ASCEND_HETEROGENEOUS "option for transferring between ascend npu and gpu" OFF)
 option(USE_MNNVL "option for using Multi-Node NVLink transport" OFF)
 option(USE_CXL "option for using CXL protocol" OFF)
@@ -121,6 +122,10 @@ endif()
 
 if (USE_TCP)
   add_compile_definitions(USE_TCP)
+endif()
+
+if (USE_MEMFABRIC)
+  add_compile_definitions(USE_MEMFABRIC)
 endif()
 
 if (USE_ASCEND OR USE_ASCEND_DIRECT)

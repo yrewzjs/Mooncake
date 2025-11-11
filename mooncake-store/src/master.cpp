@@ -11,7 +11,9 @@
 #include "http_metadata_server.h"
 #include "rpc_service.h"
 #include "types.h"
-
+#ifdef USE_MEMFABRIC
+#include "transport/ascend_transport/memfabric_transport/memfabric_api.h"
+#endif
 #include "master_config.h"
 
 using namespace coro_rpc;
@@ -408,6 +410,16 @@ int main(int argc, char* argv[]) {
         // Give the server some time to start
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
+
+#ifdef USE_MEMFABRIC
+    if (mooncake::MemFabricInitConfigStore(master_config.rpc_address,
+                                           master_config.rpc_port + 1) != 0) {
+        LOG(FATAL) << "mf create config store failed addr:"
+                   << master_config.rpc_address
+                   << ", port:" << (master_config.rpc_port + 1);
+        return 1;
+    }
+#endif
 
     if (master_config.enable_ha) {
         mooncake::MasterServiceSupervisor supervisor(

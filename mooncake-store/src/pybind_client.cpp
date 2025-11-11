@@ -18,6 +18,10 @@
 #include "types.h"
 #include "utils.h"
 
+#ifdef USE_MEMFABRIC
+#include "transport/ascend_transport/memfabric_transport/memfabric_api.h"
+#endif
+
 namespace mooncake {
 
 // ResourceTracker implementation using singleton pattern
@@ -186,6 +190,23 @@ tl::expected<void, ErrorCode> PyClient::setup_internal(
         return tl::unexpected(ErrorCode::INVALID_PARAMS);
     }
     client_ = *client_opt;
+
+#ifdef USE_MEMFABRIC
+    // mount
+    if (this->protocol == "memfabric") {
+        std::pair<void *, size_t> segment = MemFabricGetSegment();
+        auto mountRes = client_->MountSegment(segment.first, segment.second);
+        if (!mountRes.has_value()) {
+            LOG(ERROR) << "Failed to mount segment: "
+                       << toString(mountRes.error());
+            return tl::unexpected(mountRes.error());
+        }
+        LOG(INFO) << "init bm success, dram{" << std::hex << segment.first
+                  << " " << segment.second
+                  << "}, global segment size:" << global_segment_size;
+        return {};
+    }
+#endif
 
     // Local_buffer_size is allowed to be 0, but we only register memory when
     // local_buffer_size > 0. Invoke ibv_reg_mr() with size=0 is UB, and may
