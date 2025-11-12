@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "transport/ascend_transport/memfabric_transport/memfabric_api.h"
 
 namespace mooncake {
