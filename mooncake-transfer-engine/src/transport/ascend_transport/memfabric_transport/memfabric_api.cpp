@@ -98,6 +98,9 @@ int InitMemFabricBm(const std::string& storeUrlStr) {
         config.startConfigStoreServer = false;
     }
     config.flags |= SMEM_BM_INIT_GVM_FLAG;
+    std::copy_n(storeUrl.c_str(),
+                std::min(sizeof(config.hcomUrl) - 1, storeUrl.size()),
+                config.hcomUrl);
     if (MemFabricSmemBmDl::SmemBmInit(
             storeUrl.c_str(), MemFabricSmemBmDl::GetMemFabricConfig().worldSize,
             MemFabricSmemBmDl::GetMemFabricConfig().deviceId, &config) != 0) {
