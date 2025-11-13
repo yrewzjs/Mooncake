@@ -111,7 +111,7 @@ int InitMemFabricBm(const std::string& storeUrlStr) {
         return -1;
     }
     LOG(INFO) << "init memfabric bm successs, storeUrl:" << storeUrl
-              << ", connUrl:" << std::to_string(config.hcomUrl);
+              << ", connUrl:" << config.hcomUrl;
     return 0;
 }
 
