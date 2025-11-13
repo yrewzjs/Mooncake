@@ -64,6 +64,7 @@ int InitMemFabricLog() {
 
 int InitMemFabricBm(const std::string& storeUrlStr) {
     std::string storeUrl;
+    std::string connUrl;
     smem_bm_config_t config = {};
     if (MemFabricSmemBmDl::SmemBmConfigInit(&config) != 0) {
         LOG(ERROR) << "Failed to init smem bm config";
@@ -85,7 +86,7 @@ int InitMemFabricBm(const std::string& storeUrlStr) {
             try {
                 port = std::stoi(portStr);
                 port += 1;
-                if (port < 1024 || port > 65535) {
+                if (port < 1024 || port > 65534) {
                     LOG(ERROR) << "Port out of range:" << port;
                     return -1;
                 }
@@ -95,12 +96,13 @@ int InitMemFabricBm(const std::string& storeUrlStr) {
                 return -1;
             }
             storeUrl = "tcp://" + ip + ":" + std::to_string(port);
+            connUrl = "tcp://" + ip + ":" + std::to_string(port + 1);
         }
         config.startConfigStoreServer = false;
     }
     config.flags |= SMEM_BM_INIT_GVM_FLAG;
-    std::copy_n(storeUrl.c_str(),
-                std::min(sizeof(config.hcomUrl) - 1, storeUrl.size()),
+    std::copy_n(connUrl.c_str(),
+                std::min(sizeof(config.hcomUrl) - 1, connUrl.size()),
                 config.hcomUrl);
     if (MemFabricSmemBmDl::SmemBmInit(
             storeUrl.c_str(), MemFabricSmemBmDl::GetMemFabricConfig().worldSize,
