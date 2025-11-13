@@ -110,6 +110,8 @@ int InitMemFabricBm(const std::string& storeUrlStr) {
         LOG(ERROR) << "Failed to init smem bm:" << storeUrl;
         return -1;
     }
+    LOG(INFO) << "init memfabric bm successs, storeUrl:" << storeUrl
+              << ", connUrl:" << std::to_string(config.hcomUrl);
     return 0;
 }
 
@@ -142,13 +144,13 @@ int MemFabricInitSmemBm(std::string storeUrl) {
                                              localHBMSize, 0);
     if (handle == nullptr) {
         MemFabricSmemBmDl::SmemBmUninit(0);
-        LOG(ERROR) << "Failed to create smem bm";
+        LOG(ERROR) << "Failed to create smem bm:" << storeUrl;
     }
     // join
     if (MemFabricSmemBmDl::SmemBmJoin(handle, 0) != 0) {
         MemFabricSmemBmDl::SmemBmDestory(handle);
         MemFabricSmemBmDl::SmemBmUninit(0);
-        LOG(ERROR) << "Failed to join smem bm";
+        LOG(ERROR) << "Failed to join smem bm:" << storeUrl;
         return -1;
     }
     return 0;
