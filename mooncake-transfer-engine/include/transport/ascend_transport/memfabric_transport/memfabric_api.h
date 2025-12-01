@@ -160,8 +160,8 @@ using FUNC_SMEM_TRANS_BATCH_REGISTER_MEM = int32_t (*)(smem_trans_t, void *[], s
 using FUNC_SMEM_TRANS_WRITE = int32_t (*)(smem_trans_t, const void *, const char *, void *, size_t);
 using FUNC_SMEM_TRANS_BATCH_WRITE = int32_t (*)(smem_trans_t, const void *[], const char *,
                                                 void *[], size_t [], uint32_t);
-using FUNC_SMEM_TRANS_BATCH_COPY = int32_t (*)(smem_trans_t, const void *[], const char *,
-                                               void *[], size_t[], uint32_t, smem_bm_copy_type);
+using FUNC_SMEM_TRANS_BATCH_READ = int32_t (*)(smem_trans_t, const void *[], const char *,
+                                               void *[], size_t [], uint32_t);
 
 #define DLSYM(TARGET_FUNC_VAR, TARGET_FUNC_TYPE, FILE_HANDLE, SYMBOL_NAME)   \
     do {                                                                     \
@@ -178,6 +178,7 @@ using FUNC_SMEM_TRANS_BATCH_COPY = int32_t (*)(smem_trans_t, const void *[], con
 
 constexpr uint64_t GB_MEM_BYTES = 1024ULL * 1024ULL * 1024ULL;
 constexpr uint64_t TB_MEM_BYTES = 1024ULL * 1024ULL * 1024ULL * 1024ULL;
+constexpr uint64_t MAX_DRAM_MEM_BYTES = 32 * 1024ULL * 1024ULL * 1024ULL * 1024ULL;
 
 struct MemFabricConfig {
     uint32_t deviceId{0};
@@ -185,6 +186,7 @@ struct MemFabricConfig {
     uint64_t dramSize{GB_MEM_BYTES};
     uint64_t hbmSize{0};
     int32_t logLevel{1};
+    bool useLocalHostMemory{false};
     smem_bm_data_op_type opType{SMEMB_DATA_OP_DEVICE_RDMA};
     smem_bm_data_op_type transOpType{SMEMB_DATA_OP_DEVICE_RDMA};
     std::string storeUrl{};
@@ -446,14 +448,13 @@ class MemFabricSmemDl {
         return pSmemTransBatchWrite(trans, src, destName, dest, length, count);
     }
 
-    static int32_t SmemTransBatchCopy(smem_trans_t handle, const void *localAddrs[], const char *remoteUniqueId,
-                                      void *remoteAddrs[], size_t dataSizes[], uint32_t batchSize,
-                                      smem_bm_copy_type opcode) {
-        if (!pSmemTransBatchCopy) {
-            LOG(ERROR) << "Call pSmemTransBatchCopy is nullptr";
+    static int32_t SmemTransBatchRead(smem_trans_t trans, const void *locals[], const char *remoteName, void *remotes[],
+                                      size_t length[], uint32_t count) {
+        if (!pSmemTransBatchRead) {
+            LOG(ERROR) << "Call pSmemTransBatchWrite is nullptr";
             return -1;
         }
-        return pSmemTransBatchCopy(handle, localAddrs, remoteUniqueId, remoteAddrs, dataSizes, batchSize, opcode);
+        return pSmemTransBatchRead(trans, locals, remoteName, remotes, length, count);
     }
 
     static void InitMemFabricConfig()
@@ -482,9 +483,22 @@ class MemFabricSmemDl {
             if (val >= GB_MEM_BYTES && val <= TB_MEM_BYTES &&
                 val % (GB_MEM_BYTES) == 0) {
                 config_.dramSize = val;
+            } else {
+                LOG(ERROR) << "Get config dramSize failed size must in 1GB ~ 1TB"
+                           << " and must align 1GB " << " now is:" << dramSizeStr;
             }
             LOG(WARNING) << "Set config dramSize=" << config_.dramSize
                          << " by environment variable MF_DRAM_SIZE";
+        }
+        config_.worldSize = std::min(config_.worldSize, (uint32_t) (MAX_DRAM_MEM_BYTES / config_.dramSize));
+        auto useLocalHostMemoryStr = std::getenv("MF_USE_LOCAL_HOST");
+        if (useLocalHostMemoryStr) {
+            auto val = atoi(useLocalHostMemoryStr);
+            if (val == 1) {
+                config_.useLocalHostMemory = true;
+            }
+            LOG(WARNING) << "Set config useLocalHostMemory=" << config_.useLocalHostMemory
+                         << " by environment variable MF_USE_LOCAL_HOST";
         }
         auto opTypeStr = std::getenv("MF_OP_TYPE");
         if (!opTypeStr) {
@@ -582,7 +596,7 @@ class MemFabricSmemDl {
               smemHandle, "smem_trans_batch_register_mem");
         DLSYM(pSmemTransWrite, FUNC_SMEM_TRANS_WRITE, smemHandle, "smem_trans_write");
         DLSYM(pSmemTransBatchWrite, FUNC_SMEM_TRANS_BATCH_WRITE, smemHandle, "smem_trans_batch_write");
-        DLSYM(pSmemTransBatchCopy, FUNC_SMEM_TRANS_BATCH_COPY, smemHandle, "smem_trans_batch_copy");
+        DLSYM(pSmemTransBatchRead, FUNC_SMEM_TRANS_BATCH_READ , smemHandle, "smem_trans_batch_read");
 
         gLoaded_ = true;
         LOG(INFO) << "load memfabric api success";
@@ -617,7 +631,7 @@ private:
     static FUNC_SMEM_TRANS_BATCH_REGISTER_MEM pSmemTransBatchRegisterMem;
     static FUNC_SMEM_TRANS_WRITE pSmemTransWrite;
     static FUNC_SMEM_TRANS_BATCH_WRITE pSmemTransBatchWrite;
-    static FUNC_SMEM_TRANS_BATCH_COPY pSmemTransBatchCopy;
+    static FUNC_SMEM_TRANS_BATCH_READ pSmemTransBatchRead;
 
    private:
     static bool gLoaded_;

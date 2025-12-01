@@ -9,9 +9,9 @@ import torch_npu
 
 from mooncake_store import Mooncakestore, MooncakeConfig
 
-process_count: int = 1
-one_batch_count: int = 1
-call_count: int = 1
+process_count: int = 8
+one_batch_count: int = 40
+call_count: int = 64
 size1 = [128 * 1024 for _ in range(61)]
 size2 = [16 * 1024 for _ in range(61)]
 block_size = [item for pair in zip(size1, size2) for item in pair]
@@ -82,15 +82,16 @@ def init_mooncake(device_id: int):
     os.environ['MF_LOG_LEVEL'] = str(3)
     os.environ['MF_DRAM_SIZE'] = str(1024 * 1024 * 1024 * 16)
     os.environ['MF_OP_TYPE'] = 'device_rdma'
+    os.environ['MF_STORE_URL'] = '61.47.1.122:7890'
     config = MooncakeConfig(
         device=device_id,
-        protocol='memfabric',
+        protocol='ascend',
         device_name= '',
-        local_hostname='141.61.41.87',
+        local_hostname='61.47.1.122',
         metadata_server='P2PHANDSHAKE',
         global_segment_size=1024 * 1024 * 1024 * 16,
         local_buffer_size=1024 * 1024 * 256,
-        master_server_address='141.61.41.87:50051')
+        master_server_address='61.47.1.122:50051')
     store = Mooncakestore(config)
     return store
 
@@ -106,6 +107,7 @@ def write_worker(device: int):
     store.register(tensor1.data_ptr(), max(size1, default=0) * len(size1) * one_batch_count)
     store.register(tensor2.data_ptr(), max(size2, default=0) * len(size2) * one_batch_count)
     print(f"==== Success to init device:{device_id}")
+    sleep(20)
     for i in range(call_count):
         keys = []
         buffs = []
@@ -121,7 +123,7 @@ def write_worker(device: int):
         for j in range(one_batch_count):
             block_tensors = [item for pair in zip(get_col_tensors_by_index(tensor1, len(size1), j),
                                                   get_col_tensors_by_index(tensor2, len(size2), j)) for item in pair]
-            print(f"==== key({keys[j]}) res({ret[j]})) sum({tensor_sum(block_tensors, block_size)})")
+            #print(f"==== key({keys[j]}) res({ret[j]})) sum({tensor_sum(block_tensors, block_size)})")
     print(f"===== npu:{device_id} 结束 wait......")
     sleep(30 * 60)
 
@@ -137,6 +139,7 @@ def read_worker(device: int):
     store.register(tensor1.data_ptr(), max(size1, default=0) * len(size1) * one_batch_count)
     store.register(tensor2.data_ptr(), max(size2, default=0) * len(size2) * one_batch_count)
     print(f"==== Success to init device:{device_id}")
+    sleep(50)
     for i in range(call_count):
         keys = []
         buffs = []
@@ -148,10 +151,14 @@ def read_worker(device: int):
                                                 get_col_tensors_ptr_by_index(tensor2, len(size2), j)) for item in pair]
             buffs.append(block_buffs)
             sizes.append(block_size)
-        ret = store.get_batch(keys, buffs, sizes)
+        try:
+            ret = store.get_batch(keys, buffs, sizes)
+        except Exception as e:
+            print(f"store.get_batch failed")
+            sleep(3)
         for j in range(one_batch_count):
             block_tensors = [item for pair in zip(get_col_tensors_by_index(tensor1, len(size1), j),
                                                   get_col_tensors_by_index(tensor2, len(size2), j)) for item in pair]
-            print(f"==== key({keys[j]}) res({ret[j]})) sum({tensor_sum(block_tensors, block_size)})")
+            #print(f"==== key({keys[j]}) res({ret[j]})) sum({tensor_sum(block_tensors, block_size)})")
     print(f"===== npu:{device_id} 结束 wait......")
     sleep(30 * 60)

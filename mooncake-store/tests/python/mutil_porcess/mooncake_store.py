@@ -21,26 +21,37 @@ class MooncakeConfig:
 
 class Mooncakestore():
     def __init__(self, config: MooncakeConfig):
-        self.transfer_engine_ = TransferEngine()
-        ret_value = self.transfer_engine_.initialize(config.local_hostname,
-                                                     config.metadata_server,
-                                                     config.protocol,
-                                                     config.device_name)
-        if ret_value != 0:
-            raise RuntimeError(
-                 f"TransferEngine initialization failed with ret_value: {ret_value}"
-            )
-        self.local_hostname_ = config.local_hostname + ":" + str(self.transfer_engine_.get_rpc_port())
+        self.local_hostname_ = ''
         self.store = MooncakeDistributedStore()
-        ret = self.store.setup(self.local_hostname_,
-                               config.metadata_server,
-                               config.global_segment_size,
-                               config.local_buffer_size,
-                               config.protocol,
-                               config.device_name,
-                               config.master_server_address)
+        if config.protocol == 'ascend':
+            self.transfer_engine_ = TransferEngine()
+            ret_value = self.transfer_engine_.initialize(config.local_hostname,
+                                                         config.metadata_server,
+                                                         config.protocol,
+                                                         config.device_name)
+            if ret_value != 0:
+                raise RuntimeError(
+                    f"TransferEngine initialization failed with ret_value: {ret_value}"
+                )
+            self.local_hostname_ = config.local_hostname + ":" + str(self.transfer_engine_.get_rpc_port())
+            ret = self.store.setup(self.local_hostname_,
+                                   config.metadata_server,
+                                   config.global_segment_size,
+                                   config.local_buffer_size,
+                                   config.protocol,
+                                   config.device_name,
+                                   config.master_server_address,
+                                   self.transfer_engine_.get_engine())
+        else:
+            ret = self.store.setup(config.local_hostname,
+                                   config.metadata_server,
+                                   config.global_segment_size,
+                                   config.local_buffer_size,
+                                   config.protocol,
+                                   config.device_name,
+                                   config.master_server_address)
         if ret != 0:
-            msg = "Initialize mooncake failed."
+            msg = f"Initialize mooncake failed protocol:{config.protocol}."
             raise RuntimeError(msg)
 
     def exists(self, key: str) -> bool:

@@ -12,8 +12,8 @@ def process_files(read_file, write_file):
     }
 
     # 第二种格式的正则表达式: I20251027 20:55:24.025612 36525 ... batch_put_from_multi_buffers: 928us
-    pattern_put = r'I\d{8} \d{2}:\d{2}:\d{2}\.\d+ (\d+) .*batch_put_from_multi_buffers:\s*(\d+)us'
-    pattern_get = r'I\d{8} \d{2}:\d{2}:\d{2}\.\d+ (\d+) .*batch_get_into_multi_buffers:\s*(\d+)us'
+    pattern_put = r'I\d{8} \d{2}:\d{2}:\d{2}\.\d+\s*(\d+) .*batch_put_from_multi_buffers:\s*(\d+)us'
+    pattern_get = r'I\d{8} \d{2}:\d{2}:\d{2}\.\d+\s*(\d+) .*batch_get_into_multi_buffers:\s*(\d+)us'
     
     # 处理第一个文件
     try:

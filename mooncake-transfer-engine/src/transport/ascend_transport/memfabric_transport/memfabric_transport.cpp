@@ -21,9 +21,6 @@ Status MemFabricTransport::batchCopySmemTrans(const std::unordered_map<SegmentID
         if (count == 0) {
             continue;
         }
-        smem_bm_copy_type t = slices[0]->opcode == TransferRequest::READ
-                              ? SMEMB_COPY_G2L
-                              : SMEMB_COPY_L2G;
         std::string targetName;
         auto targetSegmentDesc = metadata_->getSegmentDescByID(segmentId);
         if (targetSegmentDesc != nullptr) {
@@ -39,8 +36,13 @@ Status MemFabricTransport::batchCopySmemTrans(const std::unordered_map<SegmentID
             remoteAddrs[i] = (void *)slices[i]->memfabric.dest_addr;
             dataSizes[i] = slices[i]->length;
         }
-        auto ret = MemFabricSmemDl::SmemTransBatchCopy(MemFabricSmemDl::GetSmemTransHandle(), localAddrs.data(),
-            targetName.c_str(), remoteAddrs.data(), dataSizes.data(), count, t);
+        auto ret = slices[0]->opcode == TransferRequest::READ ?
+            MemFabricSmemDl::SmemTransBatchRead(MemFabricSmemDl::GetSmemTransHandle(),
+                                                localAddrs.data(), targetName.c_str(),
+                                                remoteAddrs.data(), dataSizes.data(), count) :
+            MemFabricSmemDl::SmemTransBatchWrite(MemFabricSmemDl::GetSmemTransHandle(),
+                                                 localAddrs.data(), targetName.c_str(),
+                                                 remoteAddrs.data(), dataSizes.data(), count);
         if (ret != 0) {
             LOG(ERROR) << "MemFabricTransport: Failed to smem trans copy batch, ret:" << ret;
             for (auto &slice : slices) {
@@ -62,19 +64,24 @@ Status MemFabricTransport::batchCopySmemBm(const std::unordered_map<SegmentID, s
         if (count == 0) {
             continue;
         }
-        smem_bm_copy_type t = slices[0]->opcode == TransferRequest::READ
-                              ? SMEMB_COPY_G2L
-                              : SMEMB_COPY_L2G;
+        auto opcode = slices[0]->opcode;
         std::vector<const void *> sources(count);
         std::vector<void *> destinations(count);
         std::vector<uint64_t> dataSizes(count);
         for (size_t i = 0; i < count; ++i) {
-            sources[i] = (t == SMEMB_COPY_G2L ? (void *)slices[i]->memfabric.dest_addr : slices[i]->source_addr);
-            destinations[i] = (t == SMEMB_COPY_L2G ? (void *)slices[i]->memfabric.dest_addr : slices[i]->source_addr);
+            sources[i] = (opcode == TransferRequest::READ ? (void *)slices[i]->memfabric.dest_addr
+                                                          : slices[i]->source_addr);
+            destinations[i] = (opcode  == TransferRequest::WRITE ? (void *)slices[i]->memfabric.dest_addr
+                                                                 : slices[i]->source_addr);
             dataSizes[i] = slices[i]->length;
         }
         smem_batch_copy_params params = {const_cast<void **>(sources.data()), destinations.data(),
                                          dataSizes.data(), static_cast<uint32_t>(count)};
+
+        smem_bm_copy_type t = slices[0]->opcode == TransferRequest::READ ? SMEMB_COPY_G2L : SMEMB_COPY_L2G;
+        if (MemFabricSmemDl::GetMemFabricConfig().useLocalHostMemory) {
+            t = slices[0]->opcode == TransferRequest::READ ? SMEMB_COPY_G2H : SMEMB_COPY_H2G;
+        }
         auto ret = MemFabricSmemDl::SmemBmCopyBatch(MemFabricSmemDl::GetSmemBmHandle(), &params, t, 0);
         if (ret != 0) {
             LOG(ERROR) << "MemFabricTransport: Failed to smem bm copy batch, ret:" << ret;

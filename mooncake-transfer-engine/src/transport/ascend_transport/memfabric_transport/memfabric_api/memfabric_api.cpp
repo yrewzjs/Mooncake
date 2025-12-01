@@ -39,7 +39,7 @@ FUNC_SMEM_TRANS_UNREGISTER_MEM MemFabricSmemDl::pSmemTransUnregisterMem = nullpt
 FUNC_SMEM_TRANS_BATCH_REGISTER_MEM MemFabricSmemDl::pSmemTransBatchRegisterMem = nullptr;
 FUNC_SMEM_TRANS_WRITE MemFabricSmemDl::pSmemTransWrite = nullptr;
 FUNC_SMEM_TRANS_BATCH_WRITE MemFabricSmemDl::pSmemTransBatchWrite = nullptr;
-FUNC_SMEM_TRANS_BATCH_COPY MemFabricSmemDl::pSmemTransBatchCopy = nullptr;
+FUNC_SMEM_TRANS_BATCH_READ MemFabricSmemDl::pSmemTransBatchRead = nullptr;
 
 static void MfRegisterLogger(int level, const char* msg) {
     switch (level) {

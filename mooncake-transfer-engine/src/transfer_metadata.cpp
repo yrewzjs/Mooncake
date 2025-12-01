@@ -126,8 +126,6 @@ int TransferMetadata::encodeSegmentDesc(const SegmentDesc &desc,
     segmentJSON["tcp_data_port"] = desc.tcp_data_port;
     segmentJSON["timestamp"] = getCurrentDateTime();
 
-    LOG(INFO) << "==== Corrupted segment descriptor, name "
-              << desc.name << " protocol " << desc.protocol ;
     if (segmentJSON["protocol"] == "rdma") {
         Json::Value devicesJSON(Json::arrayValue);
         for (const auto &device : desc.devices) {
@@ -285,8 +283,6 @@ TransferMetadata::decodeSegmentDesc(Json::Value &segmentJSON,
     desc->protocol = segmentJSON["protocol"].asString();
     desc->tcp_data_port = segmentJSON["tcp_data_port"].asInt();
 
-    LOG(INFO) << "==== Corrupted segment descriptor, name "
-              << desc->name << " protocol " << desc->protocol ;
     if (segmentJSON.isMember("timestamp"))
         desc->timestamp = segmentJSON["timestamp"].asString();
 
@@ -429,8 +425,6 @@ TransferMetadata::decodeSegmentDesc(Json::Value &segmentJSON,
             buffer.name = bufferJSON["name"].asString();
             buffer.offset = bufferJSON["offset"].asUInt64();
             buffer.length = bufferJSON["length"].asUInt64();
-            LOG(INFO) << "==== Corrupted segment descriptor, name "
-                      << segment_name << " protocol " << desc->protocol;
             if (buffer.name.empty() || !buffer.length) {
                 LOG(WARNING) << "Corrupted segment descriptor, name "
                              << segment_name << " protocol " << desc->protocol;
