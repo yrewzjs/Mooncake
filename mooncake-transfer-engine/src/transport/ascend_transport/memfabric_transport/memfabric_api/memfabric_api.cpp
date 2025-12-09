@@ -191,6 +191,7 @@ int InitMemFabricSmemTrans(const std::string &sessionId, int deviceId) {
     config.flags |= SMEM_BM_INIT_GVM_FLAG;
     config.role = MemFabricSmemDl::GetMemFabricConfig().role;
     config.dataOpType = MemFabricSmemDl::GetMemFabricConfig().transOpType;
+    config.startConfigServer = true;
     if (MemFabricSmemDl::SmemTranInit(&config) != 0) {
         LOG(ERROR) << "Failed to init smem trans:" << storeUrl;
         return -1;
