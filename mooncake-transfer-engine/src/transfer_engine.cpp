@@ -160,7 +160,7 @@ int TransferEngine::init(const std::string &metadata_conn_string,
     int ret = metadata_->addRpcMetaEntry(local_server_name_, desc);
     if (ret) return ret;
 
-#if defined(USE_ASCEND) || defined(USE_ASCEND_DIRECT)
+#if defined(USE_ASCEND) || defined(USE_ASCEND_DIRECT) || defined(USE_MEMFABRIC)
     Transport *ascend_transport =
         multi_transports_->installTransport("ascend", local_topology_);
     if (!ascend_transport) {
@@ -223,12 +223,6 @@ int TransferEngine::init(const std::string &metadata_conn_string,
                 LOG(ERROR) << "Failed to install NVLink transport";
                 return -1;
             }
-        }
-#elif defined(USE_MEMFABRIC)
-        Transport *memfabric_transport = multi_transports_->installTransport("ascend", local_topology_);
-        if (!memfabric_transport) {
-            LOG(ERROR) << "Failed to install MemFabric transport";
-            return -1;
         }
 #else
         if (local_topology_->getHcaList().size() > 0 &&
