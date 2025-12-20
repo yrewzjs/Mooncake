@@ -239,7 +239,7 @@ int MemFabricTransport::install(std::string &local_server_name,
     auto desc = std::make_shared<SegmentDesc>();
     if (!desc) return ERR_MEMORY;
     desc->name = local_server_name_;
-    desc->protocol = "memfabric";
+    desc->protocol = "ascend";
     metadata_->addLocalSegment(LOCAL_SEGMENT_ID, local_server_name_, std::move(desc));
     LOG(INFO) << "MemFabricTransport: add segment type:" << smemType_ << " deviceId:"
               << localDeviceId_ << " segment name:" << local_server_name_ << " protocol:" << desc->protocol;

@@ -225,7 +225,7 @@ int TransferEngine::init(const std::string &metadata_conn_string,
             }
         }
 #elif defined(USE_MEMFABRIC)
-        Transport *memfabric_transport = multi_transports_->installTransport("memfabric", local_topology_);
+        Transport *memfabric_transport = multi_transports_->installTransport("ascend", local_topology_);
         if (!memfabric_transport) {
             LOG(ERROR) << "Failed to install MemFabric transport";
             return -1;
