@@ -364,6 +364,7 @@ int TransferEnginePy::batchTransferSync(
             << "buffers, peer_buffer_addresses and lengths have different size";
         return -1;
     }
+
     const int max_retry = engine_->numContexts() + 1;
     auto start_ts = getCurrentTimeInNano();
     auto total_length = std::accumulate(lengths.begin(), lengths.end(), 0ull);

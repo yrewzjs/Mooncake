@@ -195,19 +195,17 @@ tl::expected<void, ErrorCode> PyClient::setup_internal(
 
 #ifdef USE_MEMFABRIC
     // mount
-    if (this->protocol == "memfabric") {
-        std::pair<void *, size_t> segment = MemFabricGetSegment();
-        auto mountRes = client_->MountSegment(segment.first, segment.second);
-        if (!mountRes.has_value()) {
-            LOG(ERROR) << "Failed to mount segment: "
-                       << toString(mountRes.error());
-            return tl::unexpected(mountRes.error());
-        }
-        LOG(INFO) << "init bm success, dram{" << std::hex << segment.first
-                  << " " << segment.second
-                  << "}, global segment size:" << global_segment_size;
-        return {};
+    std::pair<void *, size_t> segment = MemFabricGetSegment();
+    auto mountRes = client_->MountSegment(segment.first, segment.second);
+    if (!mountRes.has_value()) {
+        LOG(ERROR) << "Failed to mount segment: "
+                    << toString(mountRes.error());
+        return tl::unexpected(mountRes.error());
     }
+    LOG(INFO) << "init bm success, dram{" << std::hex << segment.first
+                << " " << segment.second
+                << "}, global segment size:" << global_segment_size;
+    return {};
 #endif
 
     // Local_buffer_size is allowed to be 0, but we only register memory when

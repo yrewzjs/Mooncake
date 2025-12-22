@@ -230,6 +230,11 @@ Transport *MultiTransport::installTransport(const std::string &proto,
         transport = new HeterogeneousRdmaTransport();
     }
 #endif
+#ifdef USE_MEMFABRIC
+    else if (std::string(proto) == "ascend") {
+        transport = new MemFabricTransport();
+    }
+#endif
 #ifdef USE_MNNVL
     else if (std::string(proto) == "nvlink") {
         transport = new NvlinkTransport();
@@ -238,11 +243,6 @@ Transport *MultiTransport::installTransport(const std::string &proto,
 #ifdef USE_CXL
     else if (std::string(proto) == "cxl") {
         transport = new CxlTransport();
-    }
-#endif
-#ifdef USE_MEMFABRIC
-    else if (std::string(proto) == "memfabric") {
-        transport = new MemFabricTransport();
     }
 #endif
     if (!transport) {

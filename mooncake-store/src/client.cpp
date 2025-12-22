@@ -16,9 +16,6 @@
 #include "transport/transport.h"
 #include "config.h"
 #include "types.h"
-#ifdef USE_MEMFABRIC
-#include "transport/ascend_transport/memfabric_transport/memfabric_api.h"
-#endif
 
 namespace mooncake {
 
@@ -344,18 +341,6 @@ ErrorCode Client::InitTransferEngine(
 
                 if (!transport) {
                     LOG(ERROR) << "Failed to install Ascend transport";
-                    return ErrorCode::INTERNAL_ERROR;
-                }
-            } else if (protocol == "memfabric") {
-                try {
-                    transport = transfer_engine_->installTransport("memfabric", nullptr);
-                } catch (std::exception &e) {
-                    LOG(ERROR) << "memfabric_transport_install_failed error_message=\""
-                               << e.what() << "\"";
-                    return ErrorCode::INTERNAL_ERROR;
-                }
-                if (!transport) {
-                    LOG(ERROR) << "Failed to install MemFabric transport";
                     return ErrorCode::INTERNAL_ERROR;
                 }
             } else {
