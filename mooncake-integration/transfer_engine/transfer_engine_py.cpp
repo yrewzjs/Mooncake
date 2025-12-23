@@ -117,7 +117,6 @@ int TransferEnginePy::initializeExt(const char *local_hostname,
     auto device_name_safe = device_name ? std::string(device_name) : "";
     auto device_filter = buildDeviceFilter(device_name_safe);
     engine_ = std::make_unique<TransferEngine>(true, device_filter);
-
     if (getenv("MC_LEGACY_RPC_PORT_BINDING")) {
         auto hostname_port = parseHostNameWithPort(local_hostname);
         int ret =
