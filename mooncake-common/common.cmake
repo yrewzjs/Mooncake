@@ -124,10 +124,6 @@ if (USE_TCP)
   add_compile_definitions(USE_TCP)
 endif()
 
-if (USE_MEMFABRIC)
-  add_compile_definitions(USE_MEMFABRIC)
-endif()
-
 if (USE_ASCEND OR USE_ASCEND_DIRECT OR USE_MEMFABRIC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOPEN_BUILD_PROJECT ")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DOPEN_BUILD_PROJECT ")
@@ -151,6 +147,10 @@ endif()
 
 if (USE_ASCEND_DIRECT)
   add_compile_definitions(USE_ASCEND_DIRECT)
+endif()
+
+if (USE_MEMFABRIC)
+  add_compile_definitions(USE_MEMFABRIC)
 endif()
 
 if (USE_ASCEND_HETEROGENEOUS)

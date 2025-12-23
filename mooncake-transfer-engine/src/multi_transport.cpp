@@ -245,6 +245,7 @@ Transport *MultiTransport::installTransport(const std::string &proto,
         transport = new CxlTransport();
     }
 #endif
+
     if (!transport) {
         LOG(ERROR) << "Unsupported transport " << proto
                    << ", please rebuild Mooncake";

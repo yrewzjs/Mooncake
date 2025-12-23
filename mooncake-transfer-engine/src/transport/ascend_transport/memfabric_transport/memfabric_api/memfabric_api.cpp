@@ -8,7 +8,7 @@ std::mutex MemFabricSmemDl::mutex_;
 smem_bm_t MemFabricSmemDl::smemBmHandle_ = nullptr;
 smem_trans_t MemFabricSmemDl::smemTransHandle_ = nullptr;
 MemFabricConfig MemFabricSmemDl::config_;
-smem_type MemFabricSmemDl::smemTypeFlag_ = SMEM_BM;
+smem_type MemFabricSmemDl::smemTypeFlag_ = SMEM_TRANS; // default trans
 FUNC_SMEM_BM_CONFIG_INIT MemFabricSmemDl::pSmemBmConfigInit = nullptr;
 FUNC_SMEM_BM_INIT MemFabricSmemDl::pSmemBmInit = nullptr;
 FUNC_SMEM_BM_UNINIT MemFabricSmemDl::pSmemBmUninit = nullptr;
