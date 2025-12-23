@@ -124,9 +124,6 @@ class Transport {
             struct {
                 uint64_t dest_addr;
             } ascend_direct;
-            struct {
-                uint64_t dest_addr;
-            } memfabric;
         };
 
        public:

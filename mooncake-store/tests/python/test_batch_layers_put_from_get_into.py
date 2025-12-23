@@ -14,7 +14,7 @@ def init_mooncake(device_id: int):
     os.environ['MF_OP_TYPE'] = 'device_rdma'
     config = MooncakeConfig(
         device=device_id,
-        protocol='memfabric',
+        protocol='ascend',
         device_name= '',
         local_hostname='141.61.41.87',
         metadata_server='P2PHANDSHAKE',

@@ -33,7 +33,7 @@ Status MemFabricTransport::batchCopySmemTrans(const std::unordered_map<SegmentID
         std::vector<uint64_t> dataSizes(count);
         for (size_t i = 0; i < count; ++i) {
             localAddrs[i] = slices[i]->source_addr;
-            remoteAddrs[i] = (void *)slices[i]->memfabric.dest_addr;
+            remoteAddrs[i] = (void *)slices[i]->hccl.dest_addr;
             dataSizes[i] = slices[i]->length;
         }
         auto ret = slices[0]->opcode == TransferRequest::READ ?
@@ -69,9 +69,9 @@ Status MemFabricTransport::batchCopySmemBm(const std::unordered_map<SegmentID, s
         std::vector<void *> destinations(count);
         std::vector<uint64_t> dataSizes(count);
         for (size_t i = 0; i < count; ++i) {
-            sources[i] = (opcode == TransferRequest::READ ? (void *)slices[i]->memfabric.dest_addr
+            sources[i] = (opcode == TransferRequest::READ ? (void *)slices[i]->hccl.dest_addr
                                                           : slices[i]->source_addr);
-            destinations[i] = (opcode  == TransferRequest::WRITE ? (void *)slices[i]->memfabric.dest_addr
+            destinations[i] = (opcode  == TransferRequest::WRITE ? (void *)slices[i]->hccl.dest_addr
                                                                  : slices[i]->source_addr);
             dataSizes[i] = slices[i]->length;
         }
@@ -132,7 +132,7 @@ Status MemFabricTransport::submitTransfer(
         slice->length = request.length;
         slice->opcode = request.opcode;
         slice->target_id = request.target_id;
-        slice->memfabric.dest_addr = request.target_offset;
+        slice->hccl.dest_addr = request.target_offset;
         slice->task = &task;
         slice->status = Slice::PENDING;
         task.slice_list.push_back(slice);
@@ -162,7 +162,7 @@ Status MemFabricTransport::submitTransferTask(
         slice->length = request.length;
         slice->opcode = request.opcode;
         slice->target_id = request.target_id;
-        slice->memfabric.dest_addr = request.target_offset;
+        slice->hccl.dest_addr = request.target_offset;
         slice->task = &task;
         slice->status = Slice::PENDING;
         slice->ts = 0;
